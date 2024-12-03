@@ -21,18 +21,6 @@ namespace AdventOfCode2024.Core.Solutions
             return safeReports;
         }
 
-        private static bool IsSafe(IEnumerable<int> report)
-        {
-            var difPairsLessOne =report 
-                .Zip(report.Skip(1)).ToList()
-                .Select(a => (a.Second - a.First, a.First - a.Second));
-            return 
-                difPairsLessOne.All(x => x.Item1 <= 3 && 1 <= x.Item1) ||
-                difPairsLessOne.All(x => x.Item2 <= 3 && 1 <= x.Item2);
-        }
-
-
-
         internal override int Part2(List<string> input)
         {
             var safeReports = 0;
@@ -59,6 +47,16 @@ namespace AdventOfCode2024.Core.Solutions
 
             }
             return safeReports;
+        }
+
+        private static bool IsSafe(IEnumerable<int> report)
+        {
+            var difPairsLessOne =report 
+                .Zip(report.Skip(1)).ToList()
+                .Select(a => (a.Second - a.First, a.First - a.Second));
+            return 
+                difPairsLessOne.All(x => x.Item1 <= 3 && 1 <= x.Item1) ||
+                difPairsLessOne.All(x => x.Item2 <= 3 && 1 <= x.Item2);
         }
     }
 }
