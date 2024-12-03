@@ -9,27 +9,43 @@ namespace AdventOfCode2024.Core.Solutions
 {
     internal partial class Day3(string inputFileName) : BaseDay(inputFileName)
     {
+        [GeneratedRegex("mul\\(\\d{1,3},\\d{1,3}\\)")]
+        private static partial Regex MulRegex();
+
+        [GeneratedRegex("do\\(\\)")]
+        private static partial Regex DoRegex();
+
+        [GeneratedRegex("don't\\(\\)")]
+
+        private static partial Regex DontRegex();
         internal override int Part1(List<string> input)
         {
-            var result = 0;
-            foreach(var line in input)
-            {
-                var mul = FindMul(line);
-                result += MultiplyMulValues(mul.Select(x => x.value).ToList());
-            }
-            return result;
+            var line = string.Join("", input);
+            var mul = FindRegex(MulRegex().Matches(line));
+
+            return MultiplyMulValues(
+                mul
+                .Select(x => x.value)
+                .ToList()
+            );
         }
 
 
         internal override int Part2(List<string> input)
         {
-            // join all the strings from "input" to one string
-            var result = 0;
             var line = string.Join("", input);
-            var muls = FindMul(line);
-            var donts = FindDoAndDonts(line);
-            result += MultiplyMulValues(muls.Where(mul => IsMulDo(mul, donts)).Select(x => x.value).ToList());
-            return result;
+
+            var muls = FindRegex(MulRegex().Matches(line));
+
+            var switches = FindRegex(DontRegex().Matches(line));
+            switches.AddRange(FindRegex(DoRegex().Matches(line)));
+
+            return MultiplyMulValues(
+                muls
+                .Where(mul => IsMulDo(mul, switches))
+                .Select(x => x.value)
+                .ToList()
+            );
         }
 
         private static bool IsMulDo((string value, int index) mul, List<(string value, int index)> donts)
@@ -43,15 +59,9 @@ namespace AdventOfCode2024.Core.Solutions
                 .Contains("don't")??true;
         }
 
-        private static List<(string value, int index)> FindMul(string input)
+        private static List<(string value, int index)> FindRegex(MatchCollection matches)
         {
-            var list = new List<(string, int)>();
-            var matches = MulRegex().Matches(input);
-            foreach (Match match in matches)
-            {
-                list.Add((match.Value, match.Index));
-            }
-            return list;
+            return matches.Select(x => (x.Value, x.Index)).ToList();
         }
 
         private static int MultiplyMulValues(List<string> multipliers)
@@ -68,31 +78,5 @@ namespace AdventOfCode2024.Core.Solutions
 
             return result;
         }
-        private static List<(string value, int index)> FindDoAndDonts(string input)
-        {
-            var list = new List<(string, int)>();
-            var dos = DoRegex().Matches(input);
-            var donts = DontRegex().Matches(input);
-            foreach (Match match in dos)
-            {
-                list.Add((match.Value, match.Index));
-            }
-
-            foreach (Match match in donts)
-            {
-                list.Add((match.Value, match.Index));
-            }
-            return list;
-        }
-
-        [GeneratedRegex("mul\\(\\d{1,3},\\d{1,3}\\)")]
-        private static partial Regex MulRegex();
-        
-
-        [GeneratedRegex("do\\(\\)")]
-        private static partial Regex DoRegex();
-
-        [GeneratedRegex("don't\\(\\)")]
-        private static partial Regex DontRegex();
     }
 }
