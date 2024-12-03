@@ -66,17 +66,13 @@ namespace AdventOfCode2024.Core.Solutions
 
         private static int MultiplyMulValues(List<string> multipliers)
         {
-            var result = 0;
-            foreach (var mul in multipliers)
+            return multipliers.Sum(mul =>
             {
-                var split = mul.Split(",");
-                var value1 = int.Parse(new string(split[0].Where(char.IsDigit).ToArray()));
-                var value2 = int.Parse(new string(split[1].Where(char.IsDigit).ToArray()));
-
-                result += (value1 * value2);
-            }
-
-            return result;
+                var values = mul.Split(',')
+                                .Select(part => int.Parse(new string(part.Where(char.IsDigit).ToArray())))
+                                .ToArray();
+                return values[0] * values[1];
+            });
         }
     }
 }
