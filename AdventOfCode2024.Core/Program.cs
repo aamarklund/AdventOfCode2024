@@ -1,4 +1,4 @@
 ﻿using AdventOfCode2024.Core.Solutions;
 
-var day = new Day4("input");
+var day = new Day5("input");
 day.Solution();
