@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Runtime.InteropServices;
 
 namespace AdventOfCode2024.Core.Solutions
 {
@@ -25,32 +18,59 @@ namespace AdventOfCode2024.Core.Solutions
                 ["<", "v", ">"],
         };
 
-        private Dictionary<(string, string), List<string>> ARROW_SEQS = GetSequenses(arrowKeypad);
+        private static Dictionary<(string, string), List<string>> ARROW_SEQS = GetSequenses(arrowKeypad);
+        private static Dictionary<(string, string), int> ARROW_SEQS_LENGTH = ARROW_SEQS.ToDictionary(x => x.Key, x => x.Value.First().Length);
         private Dictionary<(string, string), List<string>> NUM_SEQS = GetSequenses(numKeypad);
+        private static Dictionary<(string, string, int), long> LENGTH_CACHE = [];
 
         internal override int Part1(List<string> input)
         {
-
-            var sum = 0;
+            long sum = 0;
             foreach (var line in input)
             {
-                var robot1 = Solve(line, NUM_SEQS);
-                var next = robot1;
-                for (var i = 0; i < 2; i++)
+                var inputs = Solve(line, NUM_SEQS);
+                long optimal = long.MaxValue;
+                foreach(var seq in inputs)
                 {
-                    var possibleNext = new List<string>();
-                    foreach(var seq in next)
+                    long length = 0;
+                    var asdf = Enumerable.Zip("A" + seq, seq, (a, b) => (a.ToString(), b.ToString()))
+                                    .ToList();
+                    foreach((string a, string b) in asdf)
                     {
-                        possibleNext.AddRange(Solve(seq, ARROW_SEQS));
+                        length += GetLength(a, b);
                     }
-                    var min = possibleNext.Min(x => x.Length);
-                    next = possibleNext.Where(x => x.Length == min).ToList();
+                    optimal = Math.Min(optimal, length);
                 }
 
-                sum += next[0].Length * int.Parse(string.Join("", line.Where(char.IsDigit).ToList()));
+                sum += optimal * int.Parse(string.Join("", line.Where(char.IsDigit).ToList()));
             }
 
-            return sum;
+            return (int)sum;
+        }
+
+        internal override int Part2(List<string> input)
+        {
+            long sum = 0;
+            foreach (var line in input)
+            {
+                var inputs = Solve(line, NUM_SEQS);
+                long optimal = long.MaxValue;
+                foreach(var seq in inputs)
+                {
+                    long length = 0;
+                    var asdf = Enumerable.Zip("A" + seq, seq, (a, b) => (a.ToString(), b.ToString()))
+                                    .ToList();
+                    foreach((string a, string b) in asdf)
+                    {
+                        length += GetLength(a, b, 25);
+                    }
+                    optimal = Math.Min(optimal, length);
+                }
+
+                sum += optimal * int.Parse(string.Join("", line.Where(char.IsDigit).ToList()));
+            }
+
+            return (int)sum; // DEBUG
         }
 
         private static List<string> Solve(string value, Dictionary<(string, string), List<string>> seqs)
@@ -65,6 +85,39 @@ namespace AdventOfCode2024.Core.Solutions
             return GenerateCombinations(options)
                          .Select(x => string.Join("", x))
                          .ToList();
+        }
+
+
+        private static long GetLength(string x, string y, int depth = 2)
+        {
+            if (LENGTH_CACHE.TryGetValue((x, y, depth), out long cachedLength))
+            {
+                return cachedLength;
+            }
+
+            if (depth == 1)
+            {
+
+                return ARROW_SEQS_LENGTH[(x, y)];
+            }
+
+            long optimal = long.MaxValue;
+            foreach (var seq in ARROW_SEQS[(x, y)])
+            {
+                long length = 0;
+
+                var asdf = Enumerable.Zip("A" + seq, seq, (a, b) => (a.ToString(), b.ToString()))
+                                .ToList();
+                foreach ((var a, var b) in asdf)
+                {
+                    length += GetLength(a, b, depth - 1);
+                }
+                optimal = Math.Min(optimal, length);
+            }
+
+            long result = optimal;
+            LENGTH_CACHE[(x, y, depth)] = result;
+            return result;
         }
 
         private static Dictionary<(string, string), List<string>> GetSequenses(string[][] keypad)
@@ -150,14 +203,10 @@ namespace AdventOfCode2024.Core.Solutions
             {
                 result = from seq in result
                          from item in sequence
-                         select seq.Concat(new[] { item });
+                         select seq.Concat([item]);
             }
             return result;
         }
 
-        internal override int Part2(List<string> input)
-        {
-            throw new NotImplementedException();
-        }
     }
 }
