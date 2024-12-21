@@ -23,7 +23,10 @@ namespace AdventOfCode2024.Core.Solutions
         {
                 [null, "^", "A"],
                 ["<", "v", ">"],
-            };
+        };
+
+        private Dictionary<(string, string), List<string>> ARROW_SEQS = GetSequenses(arrowKeypad);
+        private Dictionary<(string, string), List<string>> NUM_SEQS = GetSequenses(numKeypad);
 
         internal override int Part1(List<string> input)
         {
@@ -31,32 +34,40 @@ namespace AdventOfCode2024.Core.Solutions
             var sum = 0;
             foreach (var line in input)
             {
-                var robot1 = Solve(line, numKeypad);
-
-                var possible_robot2 = new List<string>();
-                foreach (var seq in robot1)
+                var robot1 = Solve(line, NUM_SEQS);
+                var next = robot1;
+                for (var i = 0; i < 2; i++)
                 {
-                    possible_robot2.AddRange(Solve(seq, arrowKeypad));
+                    var possibleNext = new List<string>();
+                    foreach(var seq in next)
+                    {
+                        possibleNext.AddRange(Solve(seq, ARROW_SEQS));
+                    }
+                    var min = possibleNext.Min(x => x.Length);
+                    next = possibleNext.Where(x => x.Length == min).ToList();
                 }
-                var minRobot2 = possible_robot2.Min(x => x.Length);
-                var robot2 = possible_robot2.Where(x => x.Length == minRobot2);
 
-                var possible_robot3 = new List<string>();
-                foreach (var seq in robot2)
-                {
-                    possible_robot3.AddRange(Solve(seq, arrowKeypad));
-                }
-                var minRobot3 = possible_robot3.Min(x => x.Length);
-                var robot3 = possible_robot3.Where(x => x.Length == minRobot3);
-
-                var complexity = minRobot3 * int.Parse(string.Join("", line.Where(char.IsDigit).ToList()));
-                sum += complexity;
+                sum += next[0].Length * int.Parse(string.Join("", line.Where(char.IsDigit).ToList()));
             }
 
             return sum;
         }
 
-        private static List<string> Solve(string value, string[][] keypad)
+        private static List<string> Solve(string value, Dictionary<(string, string), List<string>> seqs)
+        {
+
+            var options = Enumerable.Zip("A" + value, value, (a, b) => (a.ToString(), b.ToString()))
+                                    .Where(seqs.ContainsKey)
+                                    .Select(x => seqs[x])
+                                    .ToList();
+
+            // Returns all the possible paths
+            return GenerateCombinations(options)
+                         .Select(x => string.Join("", x))
+                         .ToList();
+        }
+
+        private static Dictionary<(string, string), List<string>> GetSequenses(string[][] keypad)
         {
             var positions = new Dictionary<string, (int, int)>();
             for (int r = 0; r < keypad.Length; r++)
@@ -87,15 +98,7 @@ namespace AdventOfCode2024.Core.Solutions
                 }
             }
 
-            var options = Enumerable.Zip("A" + value, value, (a, b) => (a.ToString(), b.ToString()))
-                                    .Where(seqs.ContainsKey)
-                                    .Select(x => seqs[x])
-                                    .ToList();
-
-            // Returns all the possible paths
-            return GenerateCombinations(options)
-                         .Select(x => string.Join("", x))
-                         .ToList();
+            return seqs;
         }
 
         private static List<string> GetAllPosibilities(string[][] keypad, int x, int y, Dictionary<string, (int, int)> positions)
