@@ -9,7 +9,6 @@ namespace AdventOfCode2024.Core.Solutions
     internal class Day25(string inputFileName) : BaseDay(inputFileName)
     {
         public readonly int HEIGHT = 5;
-        public readonly int WIDTH = 7;
 
         internal override int Part1(List<string> input)
         {
@@ -19,7 +18,6 @@ namespace AdventOfCode2024.Core.Solutions
             var keyHights = new List<(int,int,int,int,int)>();
             foreach (var block in lineInput.Split("\r\n\r\n"))
             {
-                var asList = block.Split("\r\n");
                 if (block.Split("\r\n")[0].All(x => x.Equals('#')))
                     lockHeights.Add(GetPinHeights(block));
                 else
